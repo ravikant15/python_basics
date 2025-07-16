@@ -35,3 +35,12 @@ print(palindrome("madam"))
 print(palindrome("racecar"))
 
 #example 4: Rabbit population growth 
+#see image in the folder
+
+def rabbit_population(n):
+    if n == 0:
+        return 1
+    else:
+        return rabbit_population(n-1) + rabbit_population(n-2)
+
+print(rabbit_population(5))
