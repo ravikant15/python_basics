@@ -81,3 +81,6 @@ print(nums1.intersection(nums2))
 
 #difference() - return a new set with all the elements that are in the first set but not in the second set
 print(nums1.difference(nums2))
+
+
+#just no change seeing for commit
