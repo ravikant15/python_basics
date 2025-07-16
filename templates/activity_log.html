@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+
+{% block title %}Activity Log{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    Activity Log
+                </h4>
+                <div>
+                    <button class="btn btn-outline-primary" onclick="exportLog()">
+                        <i class="fas fa-download me-1"></i>Export
+                    </button>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Filters -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label for="filterAction" class="form-label">Filter by Action</label>
+                        <select class="form-select" id="filterAction">
+                            <option value="">All Actions</option>
+                            <option value="login">Login</option>
+                            <option value="logout">Logout</option>
+                            <option value="register">Register</option>
+                            <option value="password_change">Password Change</option>
+                            <option value="profile_update">Profile Update</option>
+                            <option value="create_table">Create Table</option>
+                            <option value="execute_sql">Execute SQL</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="filterUser" class="form-label">Filter by User</label>
+                        <input type="text" class="form-control" id="filterUser" placeholder="Enter username">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="filterDate" class="form-label">Filter by Date</label>
+                        <input type="date" class="form-control" id="filterDate">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-grid">
+                            <button class="btn btn-primary" onclick="applyFilters()">
+                                <i class="fas fa-filter me-1"></i>Apply Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Table -->
+                {% if activities.items %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Details</th>
+                                <th>IP Address</th>
+                                <th>User Agent</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in activities.items %}
+                            <tr>
+                                <td>
+                                    <div>{{ activity.created_at.strftime('%Y-%m-%d') }}</div>
+                                    <small class="text-muted">{{ activity.created_at.strftime('%H:%M:%S') }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ activity.user.username }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 
+                                        'success' if activity.action == 'login' 
+                                        else 'warning' if activity.action == 'logout' 
+                                        else 'info' if activity.action == 'register' 
+                                        else 'secondary' 
+                                    }}">
+                                        {{ activity.action|title|replace('_', ' ') }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="text-truncate" style="max-width: 200px;" title="{{ activity.details }}">
+                                        {{ activity.details or 'No details' }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ activity.ip_address or 'N/A' }}</small>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-info" onclick="showUserAgent('{{ activity.user_agent|default('N/A') }}')">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <nav aria-label="Activity log pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if activities.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('activity_log', page=activities.prev_num) }}">
+                                <i class="fas fa-chevron-left"></i> Previous
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">
+                                <i class="fas fa-chevron-left"></i> Previous
+                            </span>
+                        </li>
+                        {% endif %}
+
+                        {% for page_num in activities.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != activities.page %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('activity_log', page=page_num) }}">{{ page_num }}</a>
+                                </li>
+                                {% else %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                                {% endif %}
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if activities.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('activity_log', page=activities.next_num) }}">
+                                Next <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">
+                                Next <i class="fas fa-chevron-right"></i>
+                            </span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+
+                <!-- Page Info -->
+                <div class="text-center text-muted">
+                    Showing {{ activities.items|length }} of {{ activities.total }} activities
+                    (Page {{ activities.page }} of {{ activities.pages }})
+                </div>
+
+                {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <h5>No activities found</h5>
+                    <p>There are no activities to display at the moment.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Agent Modal -->
+<div class="modal fade" id="userAgentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-info-circle me-2"></i>
+                    User Agent Information
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>User Agent:</strong> This shows the browser and operating system information.
+                </div>
+                <div class="form-group">
+                    <label class="form-label">User Agent String:</label>
+                    <textarea class="form-control" id="userAgentText" rows="4" readonly></textarea>
+                </div>
+                <div id="userAgentDetails" class="mt-3">
+                    <!-- Parsed user agent details will be displayed here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="copyUserAgent()">
+                    <i class="fas fa-copy me-1"></i>Copy
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function applyFilters() {
+    const action = document.getElementById('filterAction').value;
+    const user = document.getElementById('filterUser').value;
+    const date = document.getElementById('filterDate').value;
+    
+    let url = '{{ url_for("activity_log") }}?';
+    const params = [];
+    
+    if (action) params.push(`action=${action}`);
+    if (user) params.push(`user=${user}`);
+    if (date) params.push(`date=${date}`);
+    
+    if (params.length > 0) {
+        url += params.join('&');
+    }
+    
+    window.location.href = url;
+}
+
+function showUserAgent(userAgent) {
+    document.getElementById('userAgentText').value = userAgent;
+    
+    // Parse user agent for better display
+    const details = parseUserAgent(userAgent);
+    const detailsDiv = document.getElementById('userAgentDetails');
+    
+    if (details) {
+        detailsDiv.innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Browser Information:</h6>
+                    <ul class="list-unstyled">
+                        <li><strong>Browser:</strong> ${details.browser || 'Unknown'}</li>
+                        <li><strong>Version:</strong> ${details.version || 'Unknown'}</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6>System Information:</h6>
+                    <ul class="list-unstyled">
+                        <li><strong>OS:</strong> ${details.os || 'Unknown'}</li>
+                        <li><strong>Device:</strong> ${details.device || 'Unknown'}</li>
+                    </ul>
+                </div>
+            </div>
+        `;
+    } else {
+        detailsDiv.innerHTML = '<p class="text-muted">Unable to parse user agent information.</p>';
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('userAgentModal'));
+    modal.show();
+}
+
+function parseUserAgent(userAgent) {
+    if (!userAgent || userAgent === 'N/A') return null;
+    
+    // Simple parsing - in a real application, you might use a library like ua-parser-js
+    const ua = userAgent.toLowerCase();
+    
+    let browser = 'Unknown';
+    let version = 'Unknown';
+    let os = 'Unknown';
+    let device = 'Desktop';
+    
+    // Browser detection
+    if (ua.includes('chrome')) {
+        browser = 'Chrome';
+        const match = ua.match(/chrome\/(\d+)/);
+        if (match) version = match[1];
+    } else if (ua.includes('firefox')) {
+        browser = 'Firefox';
+        const match = ua.match(/firefox\/(\d+)/);
+        if (match) version = match[1];
+    } else if (ua.includes('safari')) {
+        browser = 'Safari';
+        const match = ua.match(/version\/(\d+)/);
+        if (match) version = match[1];
+    } else if (ua.includes('edge')) {
+        browser = 'Edge';
+        const match = ua.match(/edge\/(\d+)/);
+        if (match) version = match[1];
+    }
+    
+    // OS detection
+    if (ua.includes('windows')) {
+        os = 'Windows';
+    } else if (ua.includes('mac')) {
+        os = 'macOS';
+    } else if (ua.includes('linux')) {
+        os = 'Linux';
+    } else if (ua.includes('android')) {
+        os = 'Android';
+        device = 'Mobile';
+    } else if (ua.includes('iphone') || ua.includes('ipad')) {
+        os = 'iOS';
+        device = 'Mobile';
+    }
+    
+    return { browser, version, os, device };
+}
+
+function copyUserAgent() {
+    const textarea = document.getElementById('userAgentText');
+    textarea.select();
+    document.execCommand('copy');
+    
+    // Show feedback
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
+    button.classList.add('btn-success');
+    button.classList.remove('btn-primary');
+    
+    setTimeout(() => {
+        button.innerHTML = originalText;
+        button.classList.remove('btn-success');
+        button.classList.add('btn-primary');
+    }, 2000);
+}
+
+function exportLog() {
+    alert('Export functionality would be implemented here. This would generate a CSV file with all activities.');
+}
+
+// Auto-refresh every 30 seconds
+setInterval(() => {
+    // Only refresh if no filters are applied
+    if (!document.getElementById('filterAction').value && 
+        !document.getElementById('filterUser').value && 
+        !document.getElementById('filterDate').value) {
+        location.reload();
+    }
+}, 30000);
+</script>
+{% endblock %} 

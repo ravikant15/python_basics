@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-user-edit me-2"></i>
+                    Edit Profile
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Note:</strong> You can update your email address. Username changes are not allowed for security reasons.
+                </div>
+                
+                <form method="POST" id="profileForm">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">
+                            <i class="fas fa-user me-1"></i>Username
+                        </label>
+                        <input type="text" class="form-control" id="username" value="{{ user.username }}" readonly>
+                        <div class="form-text">
+                            <i class="fas fa-lock me-1"></i>Username cannot be changed for security reasons
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">
+                            <i class="fas fa-envelope me-1"></i>Email Address
+                        </label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>We'll send a confirmation email to verify your new address
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-info-circle me-1"></i>Account Information
+                        </label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-control-plaintext">
+                                    <strong>User ID:</strong> #{{ user.id }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-control-plaintext">
+                                    <strong>Role:</strong> {{ user.role|title }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-calendar me-1"></i>Account Details
+                        </label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-control-plaintext">
+                                    <strong>Member Since:</strong> {{ user.created_at.strftime('%B %d, %Y') }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-control-plaintext">
+                                    <strong>Last Login:</strong> {{ user.last_login.strftime('%B %d, %Y') if user.last_login else 'Never' }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Update Profile
+                        </button>
+                        <a href="{{ url_for('profile') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Profile
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    Security Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-success">What you can change:</h6>
+                        <ul class="small">
+                            <li>Email address</li>
+                            <li>Password (via separate page)</li>
+                            <li>Account preferences</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-warning">What you cannot change:</h6>
+                        <ul class="small">
+                            <li>Username (for security)</li>
+                            <li>User ID</li>
+                            <li>Account creation date</li>
+                            <li>Role (contact admin)</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Important:</strong> If you need to change your username or role, please contact an administrator.
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-cog me-2"></i>
+                    Additional Settings
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('edit_password') }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Change Password</h6>
+                                <small class="text-muted">Update your account password</small>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </a>
+                    <a href="{{ url_for('activity_log') }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">View Activity Log</h6>
+                                <small class="text-muted">See your recent account activity</small>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </a>
+                    {% if session.role == 'admin' %}
+                    <a href="{{ url_for('analytics') }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">View Analytics</h6>
+                                <small class="text-muted">Access system analytics and reports</small>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('profileForm');
+    const emailInput = document.getElementById('email');
+    
+    // Email validation
+    emailInput.addEventListener('input', function() {
+        const email = this.value;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        
+        if (email && !emailRegex.test(email)) {
+            this.classList.add('is-invalid');
+        } else {
+            this.classList.remove('is-invalid');
+        }
+    });
+    
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        const email = emailInput.value;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        
+        if (!emailRegex.test(email)) {
+            e.preventDefault();
+            alert('Please enter a valid email address.');
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %} 

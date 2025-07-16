@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics & Reports{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Analytics & Reports
+                </h4>
+                <div>
+                    <button class="btn btn-outline-primary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt me-1"></i>Refresh
+                    </button>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-2x mb-2"></i>
+                <h3>{{ total_users }}</h3>
+                <p class="mb-0">Total Users</p>
+                <small>{{ recent_users }} new this week</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-database fa-2x mb-2"></i>
+                <h3>{{ total_tables }}</h3>
+                <p class="mb-0">Database Tables</p>
+                <small>{{ total_rows }} total rows</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-line fa-2x mb-2"></i>
+                <h3>{{ total_activities }}</h3>
+                <p class="mb-0">Total Activities</p>
+                <small>{{ recent_activities }} this week</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-user-check fa-2x mb-2"></i>
+                <h3>{{ active_users }}</h3>
+                <p class="mb-0">Active Users</p>
+                <small>{{ "%.1f"|format((active_users / total_users * 100) if total_users > 0 else 0) }}% of total</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-area me-2"></i>
+                    User Registration & Activity Trends
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="trendsChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Activity Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="activityPieChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Database Statistics -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-table me-2"></i>
+                    Database Table Statistics
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Table Name</th>
+                                <th>Rows</th>
+                                <th>Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for table in table_stats %}
+                            <tr>
+                                <td>{{ table.name }}</td>
+                                <td>{{ table.rows }}</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar" style="width: {{ (table.rows / total_rows * 100) if total_rows > 0 else 0 }}%">
+                                            {{ "%.1f"|format((table.rows / total_rows * 100) if total_rows > 0 else 0) }}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Activity Types Breakdown
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Activity Type</th>
+                                <th>Count</th>
+                                <th>Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in activity_types %}
+                            <tr>
+                                <td>{{ activity.action|title }}</td>
+                                <td>{{ activity.count }}</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-info" style="width: {{ (activity.count / total_activities * 100) if total_activities > 0 else 0 }}%">
+                                            {{ "%.1f"|format((activity.count / total_activities * 100) if total_activities > 0 else 0) }}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activities -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    Recent Activities
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_logs %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Details</th>
+                                <th>IP Address</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in recent_logs %}
+                            <tr>
+                                <td>{{ activity.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ activity.user.username }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if activity.action == 'login' else 'info' if activity.action == 'register' else 'warning' }}">
+                                        {{ activity.action|title }}
+                                    </span>
+                                </td>
+                                <td>{{ activity.details }}</td>
+                                <td>
+                                    <small class="text-muted">{{ activity.ip_address or 'N/A' }}</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <p>No recent activities found</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Options -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-download me-2"></i>
+                    Export Options
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-primary w-100" onclick="exportData('users')">
+                            <i class="fas fa-users me-1"></i>Export Users
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-success w-100" onclick="exportData('activities')">
+                            <i class="fas fa-chart-line me-1"></i>Export Activities
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-info w-100" onclick="exportData('tables')">
+                            <i class="fas fa-table me-1"></i>Export Tables
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-warning w-100" onclick="exportData('all')">
+                            <i class="fas fa-file-archive me-1"></i>Export All
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let trendsChart, activityPieChart;
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCharts();
+    loadChartData();
+});
+
+function initializeCharts() {
+    // Trends Chart
+    const trendsCtx = document.getElementById('trendsChart').getContext('2d');
+    trendsChart = new Chart(trendsCtx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'User Registrations',
+                data: [],
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Activities',
+                data: [],
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Activity Pie Chart
+    const pieCtx = document.getElementById('activityPieChart').getContext('2d');
+    activityPieChart = new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [],
+            datasets: [{
+                data: [],
+                backgroundColor: [
+                    '#007bff',
+                    '#28a745',
+                    '#ffc107',
+                    '#dc3545',
+                    '#6c757d',
+                    '#17a2b8'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+}
+
+function loadChartData() {
+    fetch('{{ url_for("analytics_data") }}')
+        .then(response => response.json())
+        .then(data => {
+            // Update trends chart
+            trendsChart.data.labels = data.user_registrations.map(item => item[0]);
+            trendsChart.data.datasets[0].data = data.user_registrations.map(item => item[1]);
+            trendsChart.data.datasets[1].data = data.activity_over_time.map(item => item[1]);
+            trendsChart.update();
+
+            // Update pie chart
+            const activityTypes = {{ activity_types|tojson }};
+            if (activityTypes && activityTypes.length > 0) {
+                activityPieChart.data.labels = activityTypes.map(item => item.action);
+                activityPieChart.data.datasets[0].data = activityTypes.map(item => item.count);
+                activityPieChart.update();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading chart data:', error);
+        });
+}
+
+function refreshData() {
+    location.reload();
+}
+
+function exportData(type) {
+    alert(`Export ${type} functionality would be implemented here.`);
+    // In a real application, this would generate and download CSV/Excel files
+}
+</script>
+{% endblock %} 

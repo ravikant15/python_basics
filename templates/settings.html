@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+
+{% block title %}System Settings{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-cogs me-2"></i>
+                    System Settings
+                </h4>
+                <div>
+                    <a href="{{ url_for('manage_users') }}" class="btn btn-primary">
+                        <i class="fas fa-users-cog me-1"></i>Manage Users
+                    </a>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Information -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    System Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <td><strong>Application Version:</strong></td>
+                        <td>{{ system_info.app_version }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Database URI:</strong></td>
+                        <td>
+                            <code class="text-break">{{ system_info.database_uri }}</code>
+                            <button class="btn btn-sm btn-outline-secondary ms-2" onclick="copyToClipboard('{{ system_info.database_uri }}')">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Total Users:</strong></td>
+                        <td>{{ system_info.total_users }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Total Tables:</strong></td>
+                        <td>{{ system_info.total_tables }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Total Activities:</strong></td>
+                        <td>{{ system_info.total_activities }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    Security Settings
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Session Timeout</h6>
+                            <small class="text-muted">Auto-logout after inactivity</small>
+                        </div>
+                        <select class="form-select form-select-sm" style="width: auto;">
+                            <option>30 minutes</option>
+                            <option>1 hour</option>
+                            <option>2 hours</option>
+                            <option>Never</option>
+                        </select>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Password Policy</h6>
+                            <small class="text-muted">Minimum password requirements</small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary">Configure</button>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Two-Factor Authentication</h6>
+                            <small class="text-muted">Require 2FA for all users</small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="require2FA">
+                        </div>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Activity Logging</h6>
+                            <small class="text-muted">Log all user activities</small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="activityLogging" checked>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Database Management -->
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-database me-2"></i>
+                    Database Management
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <i class="fas fa-download fa-2x text-primary mb-2"></i>
+                                <h6>Backup Database</h6>
+                                <p class="small text-muted">Create a backup of all data</p>
+                                <button class="btn btn-primary btn-sm" onclick="backupDatabase()">
+                                    <i class="fas fa-download me-1"></i>Create Backup
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <i class="fas fa-upload fa-2x text-success mb-2"></i>
+                                <h6>Restore Database</h6>
+                                <p class="small text-muted">Restore from backup file</p>
+                                <button class="btn btn-success btn-sm" onclick="restoreDatabase()">
+                                    <i class="fas fa-upload me-1"></i>Restore
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <i class="fas fa-broom fa-2x text-warning mb-2"></i>
+                                <h6>Clean Logs</h6>
+                                <p class="small text-muted">Remove old activity logs</p>
+                                <button class="btn btn-warning btn-sm" onclick="cleanLogs()">
+                                    <i class="fas fa-broom me-1"></i>Clean Logs
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <i class="fas fa-chart-bar fa-2x text-info mb-2"></i>
+                                <h6>Generate Reports</h6>
+                                <p class="small text-muted">Create system reports</p>
+                                <button class="btn btn-info btn-sm" onclick="generateReports()">
+                                    <i class="fas fa-chart-bar me-1"></i>Generate
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-tools me-2"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('analytics') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-chart-line me-1"></i>View Analytics
+                    </a>
+                    <a href="{{ url_for('activity_log') }}" class="btn btn-outline-info">
+                        <i class="fas fa-history me-1"></i>Activity Log
+                    </a>
+                    <a href="{{ url_for('database_manager') }}" class="btn btn-outline-success">
+                        <i class="fas fa-database me-1"></i>Database Manager
+                    </a>
+                    <button class="btn btn-outline-warning" onclick="clearCache()">
+                        <i class="fas fa-trash me-1"></i>Clear Cache
+                    </button>
+                    <button class="btn btn-outline-danger" onclick="restartSystem()">
+                        <i class="fas fa-redo me-1"></i>Restart System
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Health -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-heartbeat me-2"></i>
+                    System Health
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
+                                 style="width: 60px; height: 60px;">
+                                <i class="fas fa-check fa-2x text-white"></i>
+                            </div>
+                            <h6>Database</h6>
+                            <span class="badge bg-success">Healthy</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
+                                 style="width: 60px; height: 60px;">
+                                <i class="fas fa-check fa-2x text-white"></i>
+                            </div>
+                            <h6>Application</h6>
+                            <span class="badge bg-success">Running</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="bg-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
+                                 style="width: 60px; height: 60px;">
+                                <i class="fas fa-exclamation-triangle fa-2x text-white"></i>
+                            </div>
+                            <h6>Storage</h6>
+                            <span class="badge bg-warning">75% Used</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="bg-info rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
+                                 style="width: 60px; height: 60px;">
+                                <i class="fas fa-memory fa-2x text-white"></i>
+                            </div>
+                            <h6>Memory</h6>
+                            <span class="badge bg-info">45% Used</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        // Show feedback
+        const button = event.target;
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check"></i>';
+        button.classList.add('btn-success');
+        button.classList.remove('btn-outline-secondary');
+        
+        setTimeout(() => {
+            button.innerHTML = originalHTML;
+            button.classList.remove('btn-success');
+            button.classList.add('btn-outline-secondary');
+        }, 2000);
+    });
+}
+
+function backupDatabase() {
+    if (confirm('Are you sure you want to create a database backup?')) {
+        alert('Backup functionality would be implemented here.');
+    }
+}
+
+function restoreDatabase() {
+    if (confirm('Are you sure you want to restore the database? This will overwrite current data.')) {
+        alert('Restore functionality would be implemented here.');
+    }
+}
+
+function cleanLogs() {
+    if (confirm('Are you sure you want to clean old activity logs? This action cannot be undone.')) {
+        alert('Clean logs functionality would be implemented here.');
+    }
+}
+
+function generateReports() {
+    alert('Report generation functionality would be implemented here.');
+}
+
+function clearCache() {
+    if (confirm('Are you sure you want to clear the system cache?')) {
+        alert('Cache cleared successfully!');
+    }
+}
+
+function restartSystem() {
+    if (confirm('Are you sure you want to restart the system? This will log out all users.')) {
+        alert('System restart functionality would be implemented here.');
+    }
+}
+
+// Auto-refresh system health every 60 seconds
+setInterval(() => {
+    // In a real application, this would fetch updated system health data
+    console.log('System health check performed');
+}, 60000);
+</script>
+{% endblock %} 

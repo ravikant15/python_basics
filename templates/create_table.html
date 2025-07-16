@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}Create Table{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-plus me-2"></i>
+                    Create New Table
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="table_name" class="form-label">Table Name</label>
+                        <input type="text" class="form-control" id="table_name" name="table_name" required>
+                        <div class="form-text">Enter a unique table name (letters, numbers, and underscores only)</div>
+                    </div>
+
+                    <h5>Table Columns</h5>
+                    <div id="columns-container">
+                        <div class="row mb-2 column-row">
+                            <div class="col-md-3">
+                                <input type="text" class="form-control" name="column_name" placeholder="Column Name" required>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" name="column_type" required>
+                                    <option value="">Select Type</option>
+                                    <option value="INT">INT</option>
+                                    <option value="DOUBLE">DOUBLE</option>
+                                    <option value="VARCHAR(255)">VARCHAR(255)</option>
+                                    <option value="TEXT">TEXT</option>
+                                    <option value="DATETIME">DATETIME</option>
+                                    <option value="BOOLEAN">BOOLEAN</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="nullable" value="not_null">
+                                    <label class="form-check-label">NOT NULL</label>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="primary_key" value="primary">
+                                    <label class="form-check-label">PRIMARY KEY</label>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeColumn(this)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-outline-primary" onclick="addColumn()">
+                            <i class="fas fa-plus me-1"></i>Add Column
+                        </button>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Create Table
+                        </button>
+                        <a href="{{ url_for('database_manager') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sample Tables -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Sample Table Templates
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6>Products Table</h6>
+                                <small class="text-muted">For e-commerce applications</small>
+                                <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadTemplate('products')">
+                                    Use Template
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6>Orders Table</h6>
+                                <small class="text-muted">For order management</small>
+                                <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadTemplate('orders')">
+                                    Use Template
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6>Blog Posts Table</h6>
+                                <small class="text-muted">For content management</small>
+                                <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadTemplate('blog')">
+                                    Use Template
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function addColumn() {
+    const container = document.getElementById('columns-container');
+    const newRow = document.createElement('div');
+    newRow.className = 'row mb-2 column-row';
+    newRow.innerHTML = `
+        <div class="col-md-3">
+            <input type="text" class="form-control" name="column_name" placeholder="Column Name" required>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" name="column_type" required>
+                <option value="">Select Type</option>
+                <option value="INT">INT</option>
+                <option value="DOUBLE">DOUBLE</option>
+                <option value="VARCHAR(255)">VARCHAR(255)</option>
+                <option value="TEXT">TEXT</option>
+                <option value="DATETIME">DATETIME</option>
+                <option value="BOOLEAN">BOOLEAN</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="nullable" value="not_null">
+                <label class="form-check-label">NOT NULL</label>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="primary_key" value="primary">
+                <label class="form-check-label">PRIMARY KEY</label>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeColumn(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    `;
+    container.appendChild(newRow);
+}
+
+function removeColumn(button) {
+    const row = button.closest('.column-row');
+    if (document.querySelectorAll('.column-row').length > 1) {
+        row.remove();
+    } else {
+        alert('You must have at least one column!');
+    }
+}
+
+function loadTemplate(template) {
+    const templates = {
+        products: {
+            name: 'products',
+            columns: [
+                { name: 'id', type: 'INT', not_null: true, primary: true },
+                { name: 'name', type: 'VARCHAR(255)', not_null: true, primary: false },
+                { name: 'description', type: 'TEXT', not_null: false, primary: false },
+                { name: 'price', type: 'DOUBLE', not_null: true, primary: false },
+                { name: 'stock', type: 'INT', not_null: true, primary: false },
+                { name: 'created_at', type: 'DATETIME', not_null: true, primary: false }
+            ]
+        },
+        orders: {
+            name: 'orders',
+            columns: [
+                { name: 'id', type: 'INT', not_null: true, primary: true },
+                { name: 'user_id', type: 'INT', not_null: true, primary: false },
+                { name: 'total_amount', type: 'DOUBLE', not_null: true, primary: false },
+                { name: 'status', type: 'VARCHAR(50)', not_null: true, primary: false },
+                { name: 'order_date', type: 'DATETIME', not_null: true, primary: false }
+            ]
+        },
+        blog: {
+            name: 'blog_posts',
+            columns: [
+                { name: 'id', type: 'INT', not_null: true, primary: true },
+                { name: 'title', type: 'VARCHAR(255)', not_null: true, primary: false },
+                { name: 'content', type: 'TEXT', not_null: true, primary: false },
+                { name: 'author_id', type: 'INT', not_null: true, primary: false },
+                { name: 'published', type: 'BOOLEAN', not_null: true, primary: false },
+                { name: 'created_at', type: 'DATETIME', not_null: true, primary: false }
+            ]
+        }
+    };
+
+    const selected = templates[template];
+    if (selected) {
+        document.getElementById('table_name').value = selected.name;
+        
+        // Clear existing columns
+        const container = document.getElementById('columns-container');
+        container.innerHTML = '';
+        
+        // Add template columns
+        selected.columns.forEach(col => {
+            const newRow = document.createElement('div');
+            newRow.className = 'row mb-2 column-row';
+            newRow.innerHTML = `
+                <div class="col-md-3">
+                    <input type="text" class="form-control" name="column_name" value="${col.name}" required>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" name="column_type" required>
+                        <option value="">Select Type</option>
+                        <option value="INT" ${col.type === 'INT' ? 'selected' : ''}>INT</option>
+                        <option value="DOUBLE" ${col.type === 'DOUBLE' ? 'selected' : ''}>DOUBLE</option>
+                        <option value="VARCHAR(255)" ${col.type === 'VARCHAR(255)' ? 'selected' : ''}>VARCHAR(255)</option>
+                        <option value="TEXT" ${col.type === 'TEXT' ? 'selected' : ''}>TEXT</option>
+                        <option value="DATETIME" ${col.type === 'DATETIME' ? 'selected' : ''}>DATETIME</option>
+                        <option value="BOOLEAN" ${col.type === 'BOOLEAN' ? 'selected' : ''}>BOOLEAN</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="nullable" value="not_null" ${col.not_null ? 'checked' : ''}>
+                        <label class="form-check-label">NOT NULL</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="primary_key" value="primary" ${col.primary ? 'checked' : ''}>
+                        <label class="form-check-label">PRIMARY KEY</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeColumn(this)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            container.appendChild(newRow);
+        });
+    }
+}
+</script>
+{% endblock %} 
